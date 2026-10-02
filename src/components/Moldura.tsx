@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { useSincronizarAbas } from "@/lib/sync";
+import { liberarRecarga } from "@/lib/recuperacao";
 
 const LINKS = [
   { href: "/ligar", rotulo: "Ligar" },
@@ -15,6 +17,11 @@ const LINKS = [
 export function Cabecalho() {
   useSincronizarAbas();
   const atual = usePathname();
+  // Página carregou bem: libera uma futura recarga automática após deploy novo.
+  useEffect(() => {
+    const t = setTimeout(liberarRecarga, 5000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <header className="bg-cartao border-b border-borda">
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">

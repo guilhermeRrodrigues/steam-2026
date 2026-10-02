@@ -20,7 +20,16 @@ export default function MapaGarca({ dados, hora, altura = 420, zoom = 14, destaq
   const posto = POSTOS.find((p) => p.id === destaquePostoId);
   return (
     <div style={{ height: altura }} className="rounded-xl overflow-hidden border border-borda">
-      <MapContainer center={centro ?? CENTRO_GARCA} zoom={zoom} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
+      {/* Sem animações: o Leaflet falha ("_leaflet_pos") se a tela é trocada no meio de um zoom animado. */}
+      <MapContainer
+        center={centro ?? CENTRO_GARCA}
+        zoom={zoom}
+        scrollWheelZoom={false}
+        zoomAnimation={false}
+        fadeAnimation={false}
+        markerZoomAnimation={false}
+        style={{ height: "100%", width: "100%" }}
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

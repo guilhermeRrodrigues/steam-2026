@@ -1,12 +1,13 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import {
   BAIRROS,
   POSTOS,
   REMEDIOS,
   TOTENS,
+  VACINAS,
   dadosIniciais,
   postoPorId,
   remedioPorId,
@@ -63,6 +64,118 @@ interface Estado extends DadosVivos {
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
+// ------------------------------------------------------- persistência segura
+
+/**
+ * localStorage pode falhar (aba anônima, cota cheia, bloqueio de cookies) ou
+ * conter lixo. Nada disso pode derrubar a página: na dúvida, começa do zero.
+ */
+const armazenamentoSeguro = {
+  getItem: (chave: string): string | null => {
+    try {
+      const valor = localStorage.getItem(chave);
+      if (valor !== null) JSON.parse(valor); // valida antes de entregar ao zustand
+      return valor;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (chave: string, valor: string) => {
+    try {
+      localStorage.setItem(chave, valor);
+    } catch {
+      // sem espaço ou bloqueado: segue só em memória
+    }
+  },
+  removeItem: (chave: string) => {
+    try {
+      localStorage.removeItem(chave);
+    } catch {
+      // ignora
+    }
+  },
+};
+
+type Obj = Record<string, unknown>;
+const ehObj = (v: unknown): v is Obj => !!v && typeof v === "object" && !Array.isArray(v);
+const ehNumero = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0;
+const texto = (v: unknown, padrao = "") => (typeof v === "string" ? v : padrao);
+const MEIA_HORA = 30 * 60 * 1000;
+
+/**
+ * Confere campo a campo o que veio do navegador e completa o que faltar com os
+ * dados de exemplo. Protege contra versões antigas e postos/remédios novos.
+ */
+export function sanear(persistido: unknown): Partial<Estado> {
+  if (!ehObj(persistido)) return {};
+  const p = persistido;
+  const base = dadosIniciais();
+  const estoqueP = ehObj(p.estoque) ? p.estoque : {};
+  const esperaP = ehObj(p.espera) ? p.espera : {};
+  const funcP = ehObj(p.funcionando) ? p.funcionando : {};
+  const vacP = ehObj(p.vacinas) ? p.vacinas : {};
+  const vacinasValidas = new Set(VACINAS.map((v) => v.id));
+
+  const estoque: DadosVivos["estoque"] = {};
+  const espera: DadosVivos["espera"] = {};
+  const funcionando: DadosVivos["funcionando"] = {};
+  const vacinas: DadosVivos["vacinas"] = {};
+  for (const posto of POSTOS) {
+    const doPosto = ehObj(estoqueP[posto.id]) ? (estoqueP[posto.id] as Obj) : {};
+    estoque[posto.id] = {};
+    for (const r of REMEDIOS) {
+      const q = doPosto[r.id];
+      estoque[posto.id][r.id] = ehNumero(q) ? Math.round(q) : base.estoque[posto.id][r.id];
+    }
+    espera[posto.id] = ehNumero(esperaP[posto.id]) ? (esperaP[posto.id] as number) : base.espera[posto.id];
+    funcionando[posto.id] = typeof funcP[posto.id] === "boolean" ? (funcP[posto.id] as boolean) : true;
+    const v = vacP[posto.id];
+    vacinas[posto.id] = Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && vacinasValidas.has(x)) : base.vacinas[posto.id];
+  }
+
+  const lista = (v: unknown) => (Array.isArray(v) ? v.filter(ehObj) : []);
+  const agora = Date.now();
+  const chamadas: Chamada[] = lista(p.chamadas)
+    .filter((c) => typeof c.id === "string" && ehNumero(c.inicio))
+    .map((c): Chamada => {
+      const inicio = c.inicio as number;
+      // Ligação que ficou "aberta" (página fechada no meio) é encerrada.
+      const fim = ehNumero(c.fim) ? c.fim : agora - inicio > MEIA_HORA ? inicio : undefined;
+      return {
+        id: c.id as string,
+        inicio,
+        fim,
+        origem: c.origem === "totem" ? "totem" : "celular",
+        origemNome: texto(c.origemNome, "—"),
+        telefone: typeof c.telefone === "string" ? c.telefone : undefined,
+        bairroId: typeof c.bairroId === "string" ? c.bairroId : undefined,
+        acoes: Array.isArray(c.acoes) ? c.acoes.filter((a): a is string => typeof a === "string") : [],
+        consultas: lista(c.consultas)
+          .filter((q) => typeof q.remedioId === "string")
+          .map((q) => ({ remedioId: q.remedioId as string, encontrado: q.encontrado === true })),
+        emergencia: c.emergencia === true,
+      };
+    })
+    .slice(0, LIMITE_HISTORICO);
+  const sms: Sms[] = lista(p.sms)
+    .filter((m) => typeof m.id === "string" && typeof m.para === "string" && typeof m.texto === "string" && ehNumero(m.quando))
+    .map((m) => ({ id: m.id as string, para: m.para as string, texto: m.texto as string, quando: m.quando as number }))
+    .slice(0, LIMITE_HISTORICO);
+  const avisos: Aviso[] = lista(p.avisos)
+    .filter((a) => typeof a.id === "string" && typeof a.telefone === "string" && typeof a.remedioId === "string" && ehNumero(a.criadoEm))
+    .map((a) => ({
+      id: a.id as string,
+      telefone: a.telefone as string,
+      remedioId: a.remedioId as string,
+      criadoEm: a.criadoEm as number,
+      atendidoEm: ehNumero(a.atendidoEm) ? a.atendidoEm : undefined,
+    }));
+  const h = p.horaSimulada;
+  const horaSimulada = typeof h === "number" && Number.isInteger(h) && h >= 0 && h <= 23 ? h : null;
+
+  return { estoque, espera, funcionando, vacinas, chamadas, sms, avisos, horaSimulada };
+}
 const LIMITE_HISTORICO = 500;
 
 function estadoInicial() {
@@ -206,7 +319,25 @@ export const useCidade = create<Estado>()(
       limparSms: () => set({ sms: [] }),
       restaurar: () => set(estadoInicial()),
     }),
-    { name: "saude-garca", version: 1 },
+    {
+      name: "saude-garca",
+      version: 2,
+      storage: createJSONStorage(() => armazenamentoSeguro),
+      // Só os dados vão para o localStorage (as funções ficam no código).
+      partialize: (s) => ({
+        estoque: s.estoque,
+        espera: s.espera,
+        funcionando: s.funcionando,
+        vacinas: s.vacinas,
+        chamadas: s.chamadas,
+        sms: s.sms,
+        avisos: s.avisos,
+        horaSimulada: s.horaSimulada,
+      }),
+      // Dados de versões antigas passam pelo mesmo saneamento do merge.
+      migrate: (persistido) => persistido as Estado,
+      merge: (persistido, atual) => ({ ...atual, ...sanear(persistido) }),
+    },
   ),
 );
 

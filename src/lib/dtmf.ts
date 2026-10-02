@@ -12,11 +12,26 @@ let ctx: AudioContext | null = null;
 
 function audio(): AudioContext | null {
   if (typeof window === "undefined" || !("AudioContext" in window)) return null;
-  ctx ??= new AudioContext();
-  return ctx;
+  try {
+    ctx ??= new AudioContext();
+    // O Chrome cria o áudio "suspenso" até o primeiro clique.
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    return ctx;
+  } catch {
+    return null;
+  }
 }
 
+/** Os tons são enfeite: se o áudio falhar, a ligação continua normalmente. */
 function tocar(freqs: number[], duracao: number, volume = 0.08, inicio = 0) {
+  try {
+    tocarSemProtecao(freqs, duracao, volume, inicio);
+  } catch {
+    // ignora
+  }
+}
+
+function tocarSemProtecao(freqs: number[], duracao: number, volume: number, inicio: number) {
   const a = audio();
   if (!a) return;
   const t0 = a.currentTime + inicio;

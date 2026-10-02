@@ -5,6 +5,7 @@ import { Cartao } from "@/components/Moldura";
 import { Teclado } from "@/components/Teclado";
 import { ControlesVoz, Legenda, ListaOpcoes } from "@/components/PainelConversa";
 import { useLigacao } from "@/lib/useLigacao";
+import { Protecao } from "@/components/Protecao";
 
 const ROTULO_STATUS = {
   ociosa: "Pronto para ligar",
@@ -34,11 +35,15 @@ export default function Ligar() {
         <div className="rounded-xl bg-[#c9dcb5] text-[#1f2d16] p-3 h-40 flex flex-col font-mono text-sm shadow-inner">
           <div className="flex justify-between text-xs">
             <span>▂▄▆ Vivo</span>
-            <span>{lig.status === "em-curso" ? "● em ligação" : ""}</span>
+            <span>{lig.status === "em-curso" && <span key="em-ligacao">● em ligação</span>}</span>
           </div>
           <p className="font-bold mt-1">{ROTULO_STATUS[lig.status]}</p>
           <p className="mt-1 line-clamp-3 text-xs leading-snug">
-            {lig.sessao?.tela === "telefone" ? `Celular: ${lig.sessao.buffer || "_"}` : lig.falaAtual}
+            {lig.sessao?.tela === "telefone" ? (
+              <span key="numero">Celular: {lig.sessao.buffer || "_"}</span>
+            ) : (
+              <span key="fala">{lig.falaAtual}</span>
+            )}
           </p>
         </div>
         <div className="flex justify-between my-4">
@@ -75,7 +80,9 @@ export default function Ligar() {
           </p>
         </Cartao>
         <Cartao titulo="Conversa (legendas)">
-          <Legenda linhas={lig.legenda} />
+          <Protecao nome="Legendas">
+            <Legenda linhas={lig.legenda} />
+          </Protecao>
         </Cartao>
         {emCurso && (
           <Cartao titulo="Opções agora">
@@ -83,14 +90,16 @@ export default function Ligar() {
           </Cartao>
         )}
         <Cartao titulo="Falar em vez de teclar">
-          <ControlesVoz
-            emCurso={emCurso}
-            ouvindo={lig.ouvindo}
-            velocidade={lig.velocidade}
-            onEscutar={lig.escutar}
-            onDizer={lig.dizer}
-            onVelocidade={lig.mudarVelocidade}
-          />
+          <Protecao nome="Controles de voz">
+            <ControlesVoz
+              emCurso={emCurso}
+              ouvindo={lig.ouvindo}
+              velocidade={lig.velocidade}
+              onEscutar={lig.escutar}
+              onDizer={lig.dizer}
+              onVelocidade={lig.mudarVelocidade}
+            />
+          </Protecao>
         </Cartao>
       </div>
     </div>

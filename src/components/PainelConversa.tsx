@@ -15,10 +15,16 @@ export function Legenda({ linhas, grande }: { linhas: Linha[]; grande?: boolean 
         <p
           key={i}
           className={`rounded-xl px-3 py-2 w-fit max-w-[95%] ${
-            l.quem === "ura" ? "bg-marca-suave text-tinta" : "ml-auto bg-serie-1 text-white"
+            l.quem === "ura"
+              ? "bg-marca-suave text-tinta"
+              : l.quem === "aviso"
+                ? "mx-auto border border-atencao bg-cartao text-tinta text-sm"
+                : "ml-auto bg-serie-1 text-white"
           }`}
+          role={l.quem === "aviso" ? "status" : undefined}
         >
-          {l.texto}
+          {l.quem === "aviso" && <span aria-hidden>⚠️ </span>}
+          <span>{l.texto}</span>
         </p>
       ))}
       <div ref={fim} />
@@ -69,13 +75,18 @@ export function ControlesVoz({
       <div className="flex flex-wrap gap-2 items-center">
         <button
           type="button"
-          disabled={!emCurso || !microfone || ouvindo}
+          disabled={!emCurso || !microfone}
           onClick={onEscutar}
+          aria-pressed={ouvindo}
           className="px-4 py-2 rounded-xl bg-marca text-white font-bold disabled:opacity-40"
         >
-          {ouvindo ? "🎙️ Ouvindo…" : "🎙️ Falar"}
+          {ouvindo ? <span key="ouvindo">🎙️ Ouvindo… (toque para parar)</span> : <span key="falar">🎙️ Falar</span>}
         </button>
-        {!microfone && <span className="text-xs text-tinta-3">Reconhecimento de voz disponível no Chrome/Edge.</span>}
+        {!microfone && (
+          <span key="sem-mic" className="text-xs text-tinta-3">
+            Reconhecimento de voz disponível no Chrome/Edge. Você pode digitar a frase abaixo.
+          </span>
+        )}
       </div>
       <form
         className="flex gap-2"

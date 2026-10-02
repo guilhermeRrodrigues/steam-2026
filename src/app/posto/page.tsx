@@ -47,7 +47,7 @@ export default function PainelPosto() {
         <Cartao titulo="Funcionamento">
           <p className="flex items-center gap-2 text-lg font-bold">
             <span className="size-3 rounded-full" style={{ background: st.cor }} />
-            {aberto ? "Aberto agora" : "Fechado agora"}
+            {aberto ? <span key="aberto">Aberto agora</span> : <span key="fechado">Fechado agora</span>}
           </p>
           <p className="text-sm text-tinta-2 mt-1">
             {posto.h24 ? "24 horas" : `Seg a sex, ${posto.abre}h às ${posto.fecha}h`} · agora são {hora}h

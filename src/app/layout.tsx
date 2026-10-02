@@ -8,6 +8,7 @@ const fonte = Atkinson_Hyperlegible({ subsets: ["latin"], weight: ["400", "700"]
 
 export const metadata: Metadata = {
   title: "Saúde Garça — atendimento por telefone",
+  other: { google: "notranslate" },
   description:
     "Simulação de um serviço público de informações de saúde por telefone e totens para Garça-SP: posto mais indicado, remédios, vacinas e emergência, sem precisar de internet.",
 };
@@ -16,8 +17,10 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={fonte.variable}>
-      <body className="min-h-dvh flex flex-col font-sans">
+    // translate="no": a tradução automática do Chrome/Edge reescreve o texto da página
+    // por baixo do React e pode derrubá-la. O site já está em português.
+    <html lang="pt-BR" translate="no" className={fonte.variable}>
+      <body className="min-h-dvh flex flex-col font-sans notranslate">
         <Cabecalho />
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">{children}</main>
         <Rodape />

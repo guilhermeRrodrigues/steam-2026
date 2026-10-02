@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tipos
+        run: npm run lint
+      - name: Testes da URA e dos dados salvos
+        run: npm test
+      - name: Build (o mesmo da Vercel)
+        run: npm run build
+      - name: Navegador para os testes de ponta a ponta
+        run: npx playwright install --with-deps chromium
+      - name: Testes de estabilidade no navegador
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: resultado-e2e
+          path: test-results/

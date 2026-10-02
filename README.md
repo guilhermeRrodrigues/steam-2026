@@ -68,6 +68,14 @@ npm test         # testes da URA
 npm run build    # mesmo build da Vercel
 ```
 
+```bash
+npm run test:e2e # testes de estabilidade no navegador (precisa de "npm run build" antes)
+```
+
+Os testes de ponta a ponta (`e2e/`) simulam o que já derrubou a página em computadores reais: tradução automática do Chrome/Edge, microfone sem permissão, reconhecimento de voz com erro, dados salvos corrompidos, troca de tela no meio do zoom do mapa e da ligação. O GitHub Actions (`.github/workflows/ci.yml`) roda tudo a cada push.
+
+Se algo der errado mesmo assim, só o bloco afetado (mapa, legendas, voz) mostra "indisponível" e a ligação continua; erros maiores mostram uma tela em português que tenta se recuperar sozinha.
+
 **Vercel:** em vercel.com → *Add New → Project* → importe este repositório do GitHub. O preset Next.js é detectado sozinho; não há variáveis de ambiente. Cada push gera um novo deploy.
 
 ## Sobre os dados

@@ -40,7 +40,7 @@ export function Indicador({ rotulo, valor, detalhe, alerta }: { rotulo: string; 
       <p className="text-sm text-tinta-2">{rotulo}</p>
       <p className={`text-3xl font-bold tabular-nums mt-1 ${alerta ? "text-critico" : ""}`}>
         {alerta && <span aria-hidden>▲ </span>}
-        {valor}
+        <span>{valor}</span>
       </p>
       {detalhe && <p className="text-xs text-tinta-3 mt-1">{detalhe}</p>}
     </div>

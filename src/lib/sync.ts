@@ -10,7 +10,9 @@ import { useCidade } from "@/lib/store";
 export function useSincronizarAbas() {
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === useCidade.persist.getOptions().name) useCidade.persist.rehydrate();
+      if (e.key !== useCidade.persist.getOptions().name) return;
+      // Falha ao ler a outra aba não pode afetar esta: mantém o estado atual.
+      Promise.resolve(useCidade.persist.rehydrate()).catch((erro) => console.error("Falha ao sincronizar abas", erro));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -22,7 +24,13 @@ export function useHidratado(): boolean {
   const [ok, setOk] = useState(false);
   useEffect(() => {
     if (useCidade.persist.hasHydrated()) setOk(true);
-    return useCidade.persist.onFinishHydration(() => setOk(true));
+    const cancelar = useCidade.persist.onFinishHydration(() => setOk(true));
+    // Nunca ficar preso em "Carregando…": segue com os dados de exemplo.
+    const limite = setTimeout(() => setOk(true), 1500);
+    return () => {
+      cancelar();
+      clearTimeout(limite);
+    };
   }, []);
   return ok;
 }

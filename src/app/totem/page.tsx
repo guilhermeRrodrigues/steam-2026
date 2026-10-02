@@ -6,6 +6,7 @@ import { Teclado } from "@/components/Teclado";
 import { Legenda } from "@/components/PainelConversa";
 import { Mapa } from "@/components/Mapa";
 import { useLigacao } from "@/lib/useLigacao";
+import { Protecao } from "@/components/Protecao";
 import { useCidade, useHora } from "@/lib/store";
 import { useHidratado } from "@/lib/sync";
 
@@ -112,13 +113,13 @@ export default function TotemPagina() {
                 <button
                   type="button"
                   onClick={lig.escutar}
-                  disabled={lig.ouvindo}
-                  className="rounded-2xl bg-[#2a78d6] px-5 py-3 text-xl font-bold disabled:opacity-60"
+                  aria-pressed={lig.ouvindo}
+                  className="rounded-2xl bg-[#2a78d6] px-5 py-3 text-xl font-bold"
                 >
-                  {lig.ouvindo ? "🎙️ Ouvindo…" : "🎙️ Falar"}
+                  {lig.ouvindo ? <span key="ouvindo">🎙️ Ouvindo… (toque para parar)</span> : <span key="falar">🎙️ Falar</span>}
                 </button>
                 <button type="button" onClick={() => lig.mudarVelocidade(lig.velocidade > 0.8 ? 0.75 : 1)} className="rounded-2xl bg-white/15 px-5 py-3 text-xl">
-                  {lig.velocidade > 0.8 ? "🐢 Falar mais devagar" : "Velocidade normal"}
+                  {lig.velocidade > 0.8 ? <span key="devagar">🐢 Falar mais devagar</span> : <span key="normal">Velocidade normal</span>}
                 </button>
                 <button type="button" onClick={lig.desligar} className="rounded-2xl bg-white/15 px-5 py-3 text-xl">
                   Encerrar
@@ -137,11 +138,13 @@ export default function TotemPagina() {
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="bg-cartao border border-borda rounded-2xl p-4">
           <h2 className="font-bold mb-2">Legendas</h2>
-          <Legenda linhas={lig.legenda} grande />
+          <Protecao nome="Legendas">
+            <Legenda linhas={lig.legenda} grande />
+          </Protecao>
         </section>
         <section className="bg-cartao border border-borda rounded-2xl p-4">
           <h2 className="font-bold mb-2">
-            {postoIndicado ? `Caminho até: ${postoIndicado.apelido}` : "Você está aqui"}
+            {postoIndicado ? <span key="caminho">Caminho até: {postoIndicado.apelido}</span> : <span key="aqui">Você está aqui</span>}
           </h2>
           {hidratado && (
             <Mapa
