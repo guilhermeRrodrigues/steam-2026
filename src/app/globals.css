@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  color-scheme: light;
+  --fundo: #f4f6f3;
+  --cartao: #ffffff;
+  --borda: #dcdfd8;
+  --tinta: #12201a;
+  --tinta-2: #4b5a52;
+  --tinta-3: #7a877f;
+  --marca: #0b7a53;
+  --marca-forte: #075c3e;
+  --marca-suave: #dff3ea;
+  /* dataviz: série única (azul) e status (fixos) */
+  --serie-1: #2a78d6;
+  --ok: #0ca30c;
+  --atencao: #fab219;
+  --serio: #ec835a;
+  --critico: #d03b3b;
+  --trilho: #eceee9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --fundo: #0f1512;
+    --cartao: #18201c;
+    --borda: #2c3631;
+    --tinta: #eef3ef;
+    --tinta-2: #b9c4bd;
+    --tinta-3: #87938c;
+    --marca: #2fbf86;
+    --marca-forte: #5fd8a6;
+    --marca-suave: #173a2c;
+    --serie-1: #3987e5;
+    --trilho: #252d29;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --fundo: #0f1512;
+  --cartao: #18201c;
+  --borda: #2c3631;
+  --tinta: #eef3ef;
+  --tinta-2: #b9c4bd;
+  --tinta-3: #87938c;
+  --marca: #2fbf86;
+  --marca-forte: #5fd8a6;
+  --marca-suave: #173a2c;
+  --serie-1: #3987e5;
+  --trilho: #252d29;
+}
+
+@theme inline {
+  --color-fundo: var(--fundo);
+  --color-cartao: var(--cartao);
+  --color-borda: var(--borda);
+  --color-tinta: var(--tinta);
+  --color-tinta-2: var(--tinta-2);
+  --color-tinta-3: var(--tinta-3);
+  --color-marca: var(--marca);
+  --color-marca-forte: var(--marca-forte);
+  --color-marca-suave: var(--marca-suave);
+  --color-serie-1: var(--serie-1);
+  --color-ok: var(--ok);
+  --color-atencao: var(--atencao);
+  --color-serio: var(--serio);
+  --color-critico: var(--critico);
+  --color-trilho: var(--trilho);
+  --font-sans: var(--font-texto), system-ui, sans-serif;
+}
+
+body {
+  background: var(--fundo);
+  color: var(--tinta);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--marca);
+  outline-offset: 2px;
+}
+
+.leaflet-container {
+  font: inherit;
+  background: var(--trilho);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
